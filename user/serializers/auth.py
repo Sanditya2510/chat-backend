@@ -7,12 +7,13 @@ from rest_framework_jwt.settings import api_settings
 
 User = get_user_model()
 
-JWT_PAYLOAD_HANDLER = api_settings.JWT_PAYLOAD_HANDLER
-JWT_ENCODE_HANDLER = api_settings.JWT_ENCODE_HANDLER
-JWT_RESPONSE_PAYLOAD_HANDLER = api_settings.JWT_RESPONSE_PAYLOAD_HANDLER
-
-
 class RegisterSerializer(serializers.ModelSerializer):
+    """
+    Registration Serializer
+
+    Raises:
+        serializers.ValidationError: if any of the input dont meet the reqs.
+    """
     password = serializers.CharField(style={'input_type':'password'},write_only=True)
     password2 = serializers.CharField(style={'input_type':'password'},write_only=True)
 
