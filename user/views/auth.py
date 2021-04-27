@@ -6,12 +6,11 @@ from rest_framework_jwt.settings import api_settings
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from user.serializers.auth import (
-    LoginSerializer,
     RegisterSerializer,
 )
-
-from user.utils import get_token
 
 User = get_user_model()
 
@@ -42,30 +41,11 @@ class RegisterView(viewsets.ModelViewSet):
         user.set_password(password)
         user.save()
 
-        res = get_token(user)
+        tokens = RefreshToken.for_user(user)
 
-        return Response(res, status=status.HTTP_201_CREATED)
-
-class LoginView(generics.CreateAPIView):
-    """
-    View for handling login related logic
-    Returns:
-        response: It consists of user info and token
-    """
-    permission_classes = (AllowAny, )
-    serializer_class = LoginSerializer
-    
-    def post(self, request, *args, **kwargs):
-        user = request.data
-        
-        serializer = self.serializer_class(data=user)
-        serializer.is_valid(raise_exception=True)
-        
-        username=request.data.get('username')
-        password=request.data.get('password')
-
-        user = User.objects.get(username=username)
-
-        res = get_token(user)
+        res = {
+            'refresh': str(tokens),
+            'access': str(tokens.access_token),
+        }
 
         return Response(res, status=status.HTTP_201_CREATED)

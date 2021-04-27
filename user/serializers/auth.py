@@ -46,35 +46,3 @@ class RegisterSerializer(serializers.ModelSerializer):
         if pw!=pw2:
             raise serializers.ValidationError("Passwords must match")
         return data
-
-class LoginSerializer(serializers.Serializer):
-    """
-    Validates the email and password, raises 404 if either is not 
-    found else return a new token
-    """
-    username = serializers.CharField(max_length=255, write_only=True)
-    password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
-
-    def validate(self, data):
-        """
-        Checks whether a user with the given email and password exists
-        :param data: Request Object
-        """ 
-        username = data.get('username')
-        password = data.get('password')
-        
-        user_exists = User.objects.filter(username=username).exists()
-        
-        if not user_exists:
-            raise exceptions.NotFound(
-                'A user with this username was not found'
-            )   
-
-        user = User.objects.get(username=username)
-        
-        if not user.check_password(password):
-            raise exceptions.NotFound(
-                'A user with this username and password was not found.'
-            )
-
-        return data

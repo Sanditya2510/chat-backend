@@ -25,7 +25,7 @@ SECRET_KEY = 'ao8t#+@tjp(6iwik^*ws24d9t^ksbu1+xu)prg0d8&%)d%%4+j'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -40,10 +40,11 @@ INSTALLED_APPS = [
     
     # local apps
     'user',
-
+    'chat',
 
     # 3rd party
     'rest_framework',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -78,6 +79,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
@@ -132,6 +134,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
+# Add additional settings after this line
 
 # Importing REST Configurations
 from backend.configurations.rest import *
@@ -141,3 +144,11 @@ from backend.configurations.jwt import *
 
 # Registering the Custom User Model
 AUTH_USER_MODEL = 'user.User'
+
+ASGI_APPLICATION = "backend.routing.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
