@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 
-from rest_framework import status, viewsets, generics, mixins
+from rest_framework import status, generics, mixins
 from rest_framework.response import Response
 from rest_framework_jwt.settings import api_settings
 from rest_framework.permissions import AllowAny
@@ -14,7 +14,7 @@ from user.serializers.auth import (
 
 User = get_user_model()
 
-class RegisterView(viewsets.ModelViewSet):
+class RegisterView(generics.CreateAPIView):
     """
     Viewset for handling registration related logic
     Returns:
@@ -24,7 +24,7 @@ class RegisterView(viewsets.ModelViewSet):
     serializer_class = RegisterSerializer
     queryset = User.objects.all()
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         

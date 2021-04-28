@@ -7,10 +7,10 @@ from rest_framework_simplejwt.views import (
 )
 
 router = routers.DefaultRouter()
-router.register(r'register', RegisterView, basename="user-register")
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('register/', RegisterView.as_view()),
     path('login/', TokenObtainPairView.as_view()),
     path('refresh/', TokenRefreshView.as_view()),
     
