@@ -31,3 +31,14 @@ class ThreadManager(models.Manager):
                 return obj, True
             return None, False
 
+class MessageManager(models.Manager):
+    def get_all_msgs_for_users(self, user1, user2):
+        qlookup1 = Q(thread__first=user1) & Q(thread__second=user2)
+        qlookup2 = Q(thread__first=user2) & Q(thread__second=user1)
+        qs = self.get_queryset().filter(qlookup1 | qlookup2)
+        return qs
+
+    def get_last_chat_for_user(self, user):
+        qs = (self.filter(thread__first=user) | self.filter(thread__second=user))\
+            .order_by('thread', '-timestamp').distinct('thread')
+        return qs

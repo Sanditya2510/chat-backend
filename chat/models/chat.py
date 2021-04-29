@@ -2,8 +2,9 @@ from django.db import models
 from django.conf import settings
 from django.db.models import Q
 
-from chat.managers.chat import ThreadManager
-
+from chat.managers.chat import (
+    ThreadManager, MessageManager
+)
 class Thread(models.Model):
     first = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_thread_first')
     second = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_thread_second')
@@ -21,3 +22,6 @@ class Message(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='sender', on_delete=models.CASCADE)
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+    objects = MessageManager()

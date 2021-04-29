@@ -14,6 +14,19 @@ from chat.models.chat import Message
 
 User = get_user_model()
 
+class UserChatView(generics.ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = ChatSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Message.objects.get_last_chat_for_user(user)
+
+        return qs
+    
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
 class ChatView(generics.ListAPIView):
     permission_classes = (IsAuthenticated, )
     serializer_class = ChatSerializer
@@ -21,12 +34,12 @@ class ChatView(generics.ListAPIView):
     def get_queryset(self):
         user1 = self.request.user
         user2 = User.objects.get(username=self.kwargs['username'])
-
-        qs = Message.objects.filter(thread__first=user1, thread__second=user2)\
-        or Message.objects.filter(thread__first=user2, thread__second=user1) 
+        
+        qs = Message.objects.get_all_msgs_for_users(user1, user2)
 
         return qs
     
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
