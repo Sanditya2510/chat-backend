@@ -27,10 +27,10 @@ class ChatConsumer(AsyncConsumer):
 
     async def websocket_receive(self, event):
         json_data = event.get('text')
-        if data is not None:
+        if json_data is not None:
             dict_data = json.loads(json_data)
             msg = dict_data.get('message')
-
+            
             user = self.scope['user']
             username = user.username
 
@@ -67,5 +67,5 @@ class ChatConsumer(AsyncConsumer):
 
     @database_sync_to_async
     def create_chat_message(self,me, msg):
-        thread_obj = self.thread_obj
-        return Message.objects.create(thread=thread_obj, user=me, message=msg)
+        thread = self.thread
+        return Message.objects.create(thread=thread, user=me, message=msg)
