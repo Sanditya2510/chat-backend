@@ -2,15 +2,21 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import status, generics, mixins
 from rest_framework.response import Response
-from rest_framework_jwt.settings import api_settings
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+
+from backend.configurations.jwt import SIMPLE_JWT 
 
 from user.serializers.auth import (
     RegisterSerializer,
+    LoginSerializer,
+    RefreshSerializer
 )
+
+from backend.utils import get_ws_token
 
 User = get_user_model()
 
@@ -41,11 +47,50 @@ class RegisterView(generics.CreateAPIView):
         user.set_password(password)
         user.save()
 
+        return Response({'detail': 'user successfully created'}, status=status.HTTP_201_CREATED)
+
+class LoginView(generics.CreateAPIView):
+    permission_classes = (AllowAny, )
+    serializer_class = LoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        user = User.objects.get(username=username)
+        
         tokens = RefreshToken.for_user(user)
+
+        ws_token = get_ws_token(SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME').total_seconds(), user)
 
         res = {
             'refresh': str(tokens),
             'access': str(tokens.access_token),
+            'ws_token': str(ws_token)
         }
 
+        return Response(res, status=status.HTTP_201_CREATED)
+
+    
+class RefreshView(generics.GenericAPIView):
+    permission_classes = (AllowAny, )
+    serializer_class = RefreshSerializer
+    
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+            
+        ws_token = get_ws_token(SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME').total_seconds(), user)
+
+        res = serializer.validated_data
+
+        res['ws_token'] = ws_token
+        
         return Response(res, status=status.HTTP_201_CREATED)

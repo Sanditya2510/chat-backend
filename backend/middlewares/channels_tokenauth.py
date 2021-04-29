@@ -1,22 +1,26 @@
-from channels.db import database_sync_to_async
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework_simplejwt.tokens import UntypedToken
 from urllib.parse import parse_qs
 
+from django.core.cache import cache
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 
-@database_sync_to_async
+from channels.db import database_sync_to_async
+
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.tokens import UntypedToken
+
+from backend.exceptions import TokenExpired
+
 def get_user(token):
     """
     get_user from token
     """
-    try:
-        token_data = UntypedToken(token)
-        return get_user_model().objects.get(id=token_data["user_id"])
-    except (InvalidToken, TokenError, get_user_model().DoesNotExist):
-        return AnonymousUser()
+    user = cache.get(token)
 
+    if user is None:
+        raise TokenExpired
+    
+    return user
 
 class TokenAuthMiddleware:
     """
@@ -28,6 +32,6 @@ class TokenAuthMiddleware:
 
     async def __call__(self, scope, receive, send):
         token = parse_qs(scope["query_string"].decode("utf8"))["token"][0]
-        scope["user"] = await get_user(token)
+        scope["user"] = get_user(token)
 
         return await self.inner(scope, receive, send)
