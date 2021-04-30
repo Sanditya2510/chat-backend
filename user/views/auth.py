@@ -7,8 +7,7 @@ from rest_framework.views import APIView
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-
-from backend.configurations.jwt import SIMPLE_JWT 
+from rest_framework_simplejwt.settings import api_settings
 
 from user.serializers.auth import (
     RegisterSerializer,
@@ -64,12 +63,17 @@ class LoginView(generics.CreateAPIView):
         
         tokens = RefreshToken.for_user(user)
 
-        ws_token = get_ws_token(SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME').total_seconds(), user)
+        ws_token = get_ws_token(api_settings.ACCESS_TOKEN_LIFETIME.total_seconds(), user)
+        
+        access_token_expiry = serializer.data.get('access_token_expiry')
+        refresh_token_expiry = serializer.data.get('refresh_token_expiry')
 
         res = {
             'refresh': str(tokens),
             'access': str(tokens.access_token),
-            'ws_token': str(ws_token)
+            'ws_token': str(ws_token),
+            'access_token_expiry': access_token_expiry,
+            'refresh_token_expiry': refresh_token_expiry,
         }
 
         return Response(res, status=status.HTTP_201_CREATED)
@@ -81,16 +85,24 @@ class RefreshView(generics.GenericAPIView):
     
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        
+        user = request.user
+
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
             raise InvalidToken(e.args[0])
             
-        ws_token = get_ws_token(SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME').total_seconds(), user)
 
-        res = serializer.validated_data
-
-        res['ws_token'] = ws_token
+        access_token_expiry = serializer.data.get('access_token_expiry')
+        refresh =RefreshToken(serializer.data.get('refresh')) 
         
+        access_token = str(refresh.access_token)
+        ws_token = get_ws_token(api_settings.ACCESS_TOKEN_LIFETIME.total_seconds(), user)
+
+        res = {
+            'access': access_token,
+            'ws_token': ws_token,
+            'access_token_expiry': access_token_expiry,
+        }
+
         return Response(res, status=status.HTTP_201_CREATED)
