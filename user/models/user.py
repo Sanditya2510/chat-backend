@@ -16,3 +16,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['email', ]
 
     objects = UserManager()
+
+    @property
+    def owner(self):
+        return self.username
