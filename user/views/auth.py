@@ -74,6 +74,7 @@ class LoginView(generics.CreateAPIView):
             'ws_token': str(ws_token),
             'access_token_expiry': access_token_expiry,
             'refresh_token_expiry': refresh_token_expiry,
+            'ws_token_token_expiry': access_token_expiry,
         }
 
         return Response(res, status=status.HTTP_201_CREATED)
@@ -103,6 +104,7 @@ class RefreshView(generics.GenericAPIView):
             'access': access_token,
             'ws_token': ws_token,
             'access_token_expiry': access_token_expiry,
+            'ws_token_token_expiry': access_token_expiry,
         }
 
         return Response(res, status=status.HTTP_201_CREATED)

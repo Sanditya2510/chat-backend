@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -99,10 +98,10 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'sas_chat',
-        'USER': 'admin',
-        'PASSWORD': 'admin123',
-        'HOST': 'localhost',
+        'NAME': os.environ.get('DB_DB', 'sas_chat'),
+        'USER': os.environ.get('DB_USER', 'admin'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'admin123'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': '',
     }
 }
@@ -168,6 +167,6 @@ CHANNEL_LAYERS = {
 CACHES = {
    'default': {
       'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-      'LOCATION': '127.0.0.1:11211',
+      'LOCATION': 'memcached:11211',
    }
 }
