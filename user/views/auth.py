@@ -2,17 +2,20 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import status, generics, mixins
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.settings import api_settings
 
+from backend.permissions import IsOwner
+
 from user.serializers.auth import (
     RegisterSerializer,
     LoginSerializer,
-    RefreshSerializer
+    RefreshSerializer,
+    ChangePasswordSerializer,
 )
 
 from backend.utils import get_ws_token
@@ -108,3 +111,22 @@ class RefreshView(generics.GenericAPIView):
         }
 
         return Response(res, status=status.HTTP_201_CREATED)
+
+class ChangePasswordView(generics.UpdateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (IsAuthenticated, IsOwner, )
+    serializer_class = ChangePasswordSerializer
+    lookup_field = 'username'
+
+    def patch(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        username = request.user.username
+        password = request.data.get('password')
+
+        user = User.objects.get(username=username)
+        user.set_password(password)
+        user.save()
+
+        return Response({'detail: Password successfully updated'}, status=status.HTTP_200_OK)

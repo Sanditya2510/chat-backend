@@ -91,3 +91,28 @@ class RefreshSerializer(serializers.Serializer):
 
     def get_access_token_expiry(self, obj):
         return datetime.datetime.now()+ACCESS_TOKEN_LIFETIME-datetime.timedelta(seconds=200)
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    password2 = serializers.CharField(write_only=True)
+    old_password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ('old_password', 'password', 'password2')
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+
+        return attrs
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+
+        if not user.check_password(value):
+            raise serializers.ValidationError({"old_password": "Old password is not correct"})
+        
+        return value
+
+

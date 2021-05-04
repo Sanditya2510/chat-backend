@@ -6,7 +6,7 @@ from rest_framework import (
 
 User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
@@ -14,4 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'first_name',
             'last_name',
+            'bio',
+            'bday',
+            'dp',
         ]
