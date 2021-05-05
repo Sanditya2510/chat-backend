@@ -1,22 +1,25 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 
 from rest_framework import status, generics, mixins
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from backend.permissions import IsOwner
+from backend.permissions import IsOwner, IsRequestingSelf
 
 from user.serializers.friend import(
     FriendSerializer, FriendRequestSerializer, 
+    DeleteFriendRequestSerializer, 
+    UnfriendSerializer,
 ) 
 from user.models.friend import (
-    Friend, FriendRequest
+    Friend, FriendRequest, 
 )
 
 User = get_user_model()
 
 class FriendView(generics.ListCreateAPIView,):
-    permission_classes = (IsAuthenticated, IsOwner, )
+    permission_classes = (IsAuthenticated, IsOwner, IsRequestingSelf)
     serializer_class = FriendSerializer
     lookup_field = 'username'
 
@@ -45,8 +48,8 @@ class FriendView(generics.ListCreateAPIView,):
 
         return Response(serializer.data)
 
-class FriendRequestView(generics.ListCreateAPIView):
-    permission_classes = (IsAuthenticated, IsOwner, )
+class FriendRequestView(generics.ListCreateAPIView, ):
+    permission_classes = (IsAuthenticated, IsOwner, IsRequestingSelf, )
     serializer_class = FriendRequestSerializer
     lookup_field = 'username'
 
@@ -86,3 +89,39 @@ class FriendRequestView(generics.ListCreateAPIView):
         serializer = self.get_serializer(queryset, many=True)
 
         return Response(serializer.data)
+
+class UnfriendView(generics.DestroyAPIView):
+    serializer_class = UnfriendSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def delete(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user1 = User.objects.get(username=request.data.get('user1'))
+        user2 = User.objects.get(username=request.data.get('user2'))
+
+        qlookup = Q(user=user1, friend=user2) | Q(user=user2, friend=user1)
+        qs = Friend.objects.get(qlookup)
+        
+        qs.delete()
+
+        return Response({'detail': 'successfully unfriended'}, status=status.HTTP_200_OK)
+
+
+class DeleteFriendRequestView(generics.DestroyAPIView):
+    serializer_class = DeleteFriendRequestSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def delete(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user_from = request.data.get('user_from')
+        user_to = request.data.get('user_to')
+
+        friend_request = FriendRequest.objects.get(user_from__username=user_from, 
+                                                    user_to__username=user_to)
+        friend_request.delete()
+
+        return Response({'detail': 'request successfully deleted'}, status=status.HTTP_200_OK)

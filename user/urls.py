@@ -9,7 +9,9 @@ from user.views.user import(
 ) 
 
 from user.views.friend import(
-    FriendView, FriendRequestView
+    FriendView, FriendRequestView,
+    DeleteFriendRequestView,
+    UnfriendView, 
 ) 
 
 router = routers.DefaultRouter()
@@ -23,4 +25,6 @@ urlpatterns = [
     path('change_password/<username>/', ChangePasswordView.as_view()),
     path('<username>/friend/', FriendView.as_view()),
     path('<username>/friend_request/', FriendRequestView.as_view()),
+    path('friend_request/', DeleteFriendRequestView.as_view()),
+    path('friend/', UnfriendView.as_view()),
 ]
