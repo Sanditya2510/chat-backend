@@ -18,3 +18,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'bday',
             'dp',
         ]
+
+class UserPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'username',
+            'bio',
+            'dp'
+        ]

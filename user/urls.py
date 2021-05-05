@@ -8,6 +8,10 @@ from user.views.user import(
     UserView, UserProfile, 
 ) 
 
+from user.views.friend import(
+    FriendView, FriendRequestView
+) 
+
 router = routers.DefaultRouter()
 
 urlpatterns = [
@@ -17,4 +21,6 @@ urlpatterns = [
     path('refresh/', RefreshView.as_view()),
     path('profile/<username>/', UserProfile.as_view()),
     path('change_password/<username>/', ChangePasswordView.as_view()),
+    path('<username>/friend/', FriendView.as_view()),
+    path('<username>/friend_request/', FriendRequestView.as_view()),
 ]
