@@ -24,7 +24,7 @@ urlpatterns = [
     path('<username>/', UserProfile.as_view()),
     path('<username>/change_password', ChangePasswordView.as_view()),
     path('<username>/friend/', FriendView.as_view()),
-    path('<username>/friend/<id>/delete/', UnfriendView.as_view()),
+    path('<username>/friend/<friend_id>/delete/', UnfriendView.as_view()),
     path('<username>/friend_request/', FriendRequestView.as_view()),
-    path('<username>/friend_request/<id>/delete/', DeleteFriendRequestView.as_view()),
+    path('<username>/friend_request/<friend_request_id>/delete/', DeleteFriendRequestView.as_view()),
 ]

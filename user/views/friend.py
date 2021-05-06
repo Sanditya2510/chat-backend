@@ -93,7 +93,7 @@ class FriendRequestView(generics.ListCreateAPIView, ):
 class UnfriendView(generics.DestroyAPIView):
     serializer_class = UnfriendSerializer
     permission_classes = (IsAuthenticated, IsRequestingSelf, )
-    lookup_field = 'id'
+    lookup_field = 'friend_id'
 
     def delete(self, request, *args, **kwargs):
         friend_id = kwargs.get(self.lookup_field)
@@ -113,7 +113,7 @@ class UnfriendView(generics.DestroyAPIView):
 class DeleteFriendRequestView(generics.DestroyAPIView):
     serializer_class = DeleteFriendRequestSerializer
     permission_classes = (IsAuthenticated, IsRequestingSelf, )
-    lookup_field = 'id'
+    lookup_field = 'friend_request_id'
 
     def delete(self, request, *args, **kwargs):
         friend_request_id = kwargs.get(self.lookup_field)
