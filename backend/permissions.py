@@ -13,5 +13,4 @@ class IsOwner(permissions.BasePermission):
 
 class IsRequestingSelf(permissions.BasePermission):
     def has_permission(self, request, view, **kwargs):
-        print(request.user, view.kwargs.get('username'))
         return  view.kwargs.get('username') == request.user.username

@@ -19,7 +19,7 @@ from user.models.friend import (
 User = get_user_model()
 
 class FriendView(generics.ListCreateAPIView,):
-    permission_classes = (IsAuthenticated, IsOwner, IsRequestingSelf)
+    permission_classes = (IsAuthenticated, IsRequestingSelf)
     serializer_class = FriendSerializer
     lookup_field = 'username'
 
@@ -49,7 +49,7 @@ class FriendView(generics.ListCreateAPIView,):
         return Response(serializer.data)
 
 class FriendRequestView(generics.ListCreateAPIView, ):
-    permission_classes = (IsAuthenticated, IsOwner, IsRequestingSelf, )
+    permission_classes = (IsAuthenticated, IsRequestingSelf, )
     serializer_class = FriendRequestSerializer
     lookup_field = 'username'
 
@@ -92,17 +92,18 @@ class FriendRequestView(generics.ListCreateAPIView, ):
 
 class UnfriendView(generics.DestroyAPIView):
     serializer_class = UnfriendSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, IsRequestingSelf, )
+    lookup_field = 'id'
 
     def delete(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        friend_id = kwargs.get(self.lookup_field)
+        
+        context = {'request': request, 'id': friend_id}
+
+        serializer = self.get_serializer(data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
 
-        user1 = User.objects.get(username=request.data.get('user1'))
-        user2 = User.objects.get(username=request.data.get('user2'))
-
-        qlookup = Q(user=user1, friend=user2) | Q(user=user2, friend=user1)
-        qs = Friend.objects.get(qlookup)
+        qs = Friend.objects.get(id=friend_id)
         
         qs.delete()
 
@@ -111,17 +112,18 @@ class UnfriendView(generics.DestroyAPIView):
 
 class DeleteFriendRequestView(generics.DestroyAPIView):
     serializer_class = DeleteFriendRequestSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, IsRequestingSelf, )
+    lookup_field = 'id'
 
     def delete(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        friend_request_id = kwargs.get(self.lookup_field)
+
+        context = {'request': request, 'id': friend_request_id}
+
+        serializer = self.get_serializer(data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
 
-        user_from = request.data.get('user_from')
-        user_to = request.data.get('user_to')
-
-        friend_request = FriendRequest.objects.get(user_from__username=user_from, 
-                                                    user_to__username=user_to)
+        friend_request = FriendRequest.objects.get(id=friend_request_id)
         friend_request.delete()
 
         return Response({'detail': 'request successfully deleted'}, status=status.HTTP_200_OK)

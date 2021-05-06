@@ -15,7 +15,7 @@ from backend.exceptions import(
 User = get_user_model()
 
 class FriendSerializer(serializers.ModelSerializer):
-    friend = serializers.CharField(write_only=True)
+    friend = serializers.CharField()
     friends = serializers.ListField(read_only=True)
     user = UserPublicSerializer(read_only=True)
 
@@ -85,42 +85,37 @@ class FriendRequestSerializer(serializers.ModelSerializer):
 
 
 class UnfriendSerializer(serializers.Serializer):
-    user1 = serializers.CharField(write_only=True)
-    user2 = serializers.CharField(write_only=True)
-
     def validate(self, attrs):
         user = self.context.get('request').user
         
+        friend_id = self.context.get('id')
+        
         try:
-            user1 = User.objects.get(username=attrs.get('user1'))
-            user2 = User.objects.get(username=attrs.get('user2'))
+            friend_obj = Friend.objects.get(id=friend_id)
         except:
-            raise DoesntExistError("User doesn\'t exist")
+            raise DoesntExistError("Friendship doesnt exist")
+
+        user1 = friend_obj.user
+        user2 = friend_obj.friend
 
         if not (user == user1 or user == user2):
             raise NotAuthorizedError("you are not authorized to perform this request")
-        
-        qlookup = Q(user=user1, friend=user2) | Q(user=user2, friend=user1)
-        qs = Friend.objects.filter(qlookup)
-
-        if not qs.exists():
-            raise serializers.ValidationError('Already not friends')
 
         return attrs
         
 
 class DeleteFriendRequestSerializer(serializers.Serializer):
-    user_from = serializers.CharField(write_only=True)
-    user_to = serializers.CharField(write_only=True)
-
     def validate(self, attrs):
         user = self.context.get('request').user
-        
+        friend_request_id = self.context.get('id')
+
         try:
-            user_from = User.objects.get(username=attrs.get('user_from'))
-            user_to = User.objects.get(username=attrs.get('user_to'))
+            friend_request_obj = FriendRequest.objects.get(id=friend_request_id)
         except:
-            raise DoesntExistError("User doesn\'t exist")
+            raise DoesntExistError("Friend Request doesnt exist")
+    
+        user_from = friend_request_obj.user_from
+        user_to = friend_request_obj.user_to
 
         if not (user == user_from or user == user_to):
             raise NotAuthorizedError("you are not authorized to perform this request")
@@ -130,12 +125,6 @@ class DeleteFriendRequestSerializer(serializers.Serializer):
 
         if qs.exists():
             raise serializers.ValidationError('Already friends')
-
-        qlookup = Q(user_from=user_from, user_to=user_to)
-        qs = FriendRequest.objects.filter(qlookup)
-
-        if not qs.exists():
-            raise serializers.ValidationError('Friend request doesn\'t exist')
 
         return attrs
         
