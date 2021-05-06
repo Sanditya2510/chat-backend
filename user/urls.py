@@ -6,6 +6,7 @@ from user.views.auth import(
 ) 
 from user.views.user import(
     UserView, UserProfile, 
+    UserSearch, 
 ) 
 
 from user.views.friend import(
@@ -21,6 +22,7 @@ urlpatterns = [
     path('register/', RegisterView.as_view()),
     path('login/', LoginView.as_view()),
     path('refresh/', RefreshView.as_view()),
+    path('search/', UserSearch.as_view()),
     path('<username>/', UserProfile.as_view()),
     path('<username>/change_password', ChangePasswordView.as_view()),
     path('<username>/friend/', FriendView.as_view()),

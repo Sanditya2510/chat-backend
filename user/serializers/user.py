@@ -27,3 +27,12 @@ class UserPublicSerializer(serializers.ModelSerializer):
             'bio',
             'dp'
         ]
+
+class UserSearchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'username',
+            'bio',
+            'dp',
+        ]

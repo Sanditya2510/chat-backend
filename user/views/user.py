@@ -9,6 +9,7 @@ from backend.permissions import IsOwner
 
 from user.serializers.user import (
     UserProfileSerializer,
+    UserSearchSerializer
 )
 
 User = get_user_model()
@@ -47,3 +48,21 @@ class UserProfile(generics.RetrieveAPIView,
     
     def patch(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
+
+class UserSearch(generics.ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = UserSearchSerializer
+
+    def get_queryset(self):
+        q = self.request.query_params.get('q')
+
+        qs = User.objects.filter(username__icontains=q)
+        return qs
+    
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Response(serializer.data)
+    
