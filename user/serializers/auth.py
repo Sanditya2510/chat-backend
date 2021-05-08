@@ -94,8 +94,8 @@ class RefreshSerializer(serializers.Serializer):
 
 class ChangePasswordSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
-    password2 = serializers.CharField(write_only=True)
-    old_password = serializers.CharField(write_only=True)
+    password2 = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    old_password = serializers.CharField(write_only=True, style={'input_type': 'password'})
 
     class Meta:
         model = User
