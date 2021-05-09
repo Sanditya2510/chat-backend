@@ -10,10 +10,10 @@ CACHES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'sas_chat',
-        'USER': 'admin',
-        'PASSWORD': 'admin123',
-        'HOST': 'localhost',
-        'PORT': '',
+        'NAME': os.getenv('DB_LOCAL_DB', 'sas_chat'),
+        'USER': os.getenv('DB_LOCAL_USER', 'admin'),
+        'PASSWORD': os.getenv('DB_LOCAL_PASSWORD', 'admin123'),
+        'HOST': os.getenv('DB_LOCAL_HOST', 'localhost'),
+        'PORT': '5432',
     }
 }
