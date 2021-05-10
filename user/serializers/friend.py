@@ -31,9 +31,13 @@ class FriendSerializer(serializers.ModelSerializer):
 
         user = self.context.get('request').user
         
+
         if not friend:
             raise serializers.ValidationError('No user with this username found')
 
+        if user == friend:
+            raise serializers.ValidationError('Can not add self as a friend')
+            
         qlookup = Q(user=user, friend=friend) | Q(user=friend, friend=user)
         qs = Friend.objects.filter(qlookup)
 
@@ -61,6 +65,9 @@ class FriendRequestSerializer(serializers.ModelSerializer):
         if not user_to:
             raise serializers.ValidationError('No user with this username found')
         
+        if user_to == user_from:
+            raise serializers.ValidationError('Can not send a friend request to self')
+
         qlookup = Q(user_from=user_from, user_to=user_to)
         qs = FriendRequest.objects.filter(qlookup)
 
