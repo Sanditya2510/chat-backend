@@ -120,11 +120,5 @@ class DeleteFriendRequestSerializer(serializers.Serializer):
         if not (user == user_from or user == user_to):
             raise NotAuthorizedError("you are not authorized to perform this request")
         
-        qlookup = Q(user=user_from, friend=user_to) | Q(user=user_to, friend=user_from)
-        qs = Friend.objects.filter(qlookup)
-
-        if qs.exists():
-            raise serializers.ValidationError('Already friends')
-
         return attrs
         
