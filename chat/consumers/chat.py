@@ -3,27 +3,41 @@ import json
 from channels.db import database_sync_to_async
 from channels.consumer import  AsyncConsumer
 
+from channels.exceptions import StopConsumer
+
 from chat.models.chat import Thread, Message
+from user.models.friend import Friend
 
 class ChatConsumer(AsyncConsumer):
+    def __init__(self, *args, **kwargs):
+        self.connected = False
+
     async def websocket_connect(self, event):
         user1 = self.scope['user']
         user2 = self.scope['url_route']['kwargs']['name']
         
-        thread = await self.get_thread(user1, user2)
-        self.thread = thread
+        are_friends = await self.are_friends(user1.username, user2)
         
-        chat_room =  f"chat_{thread.id}"
-        self.chat_room = chat_room
+        if are_friends:
+            thread = await self.get_thread(user1, user2)
+            self.thread = thread
+            
+            chat_room =  f"chat_{thread.id}"
+            self.chat_room = chat_room
+            await self.channel_layer.group_add(
+                self.chat_room,
+                self.channel_name
+            )
 
-        await self.channel_layer.group_add(
-            self.chat_room,
-            self.channel_name
-        )
+            self.connected = True
+            await self.send({   
+                "type": "websocket.accept"
+            })
 
-        await self.send({   
-            "type": "websocket.accept"
-        })
+        else:
+            await self.send({
+                "type": "websocket.disconnect",
+            })
 
     async def websocket_receive(self, event):
         json_data = event.get('text')
@@ -56,10 +70,14 @@ class ChatConsumer(AsyncConsumer):
         })
 
     async def websocket_disconnect(self, event):
-        await self.channel_layer.group_discard(
-            self.chat_room,
-            self.channel_name 
-        )
+        if self.connected:
+            await self.channel_layer.group_discard(
+                self.chat_room,
+                self.channel_name 
+            )
+            self.connected = False
+
+        raise StopConsumer()
 
     @database_sync_to_async
     def get_thread(self, user, other_username):
@@ -69,3 +87,8 @@ class ChatConsumer(AsyncConsumer):
     def create_chat_message(self,me, msg):
         thread = self.thread
         return Message.objects.create(thread=thread, user=me, message=msg)
+
+    @database_sync_to_async
+    def are_friends(self, user1, user2):
+        return Friend.objects.are_friends(user1, user2)
+        
