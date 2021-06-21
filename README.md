@@ -1,5 +1,5 @@
 # TODO
-1)Add elastic search<br/>
+1)Add ELK<br/>
 2)Add chat bot for processing chats
 
 # Without Docker
