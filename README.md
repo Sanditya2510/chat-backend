@@ -1,3 +1,7 @@
+# TODO
+1)Add elastic search<br/>
+2)Add chat bot for processing chats
+
 # Without Docker
 1)Run ``` pip install -r requirements.txt ```<br/>
 2)Run this to install memcache on your local ``` sudo apt-get install memcached ``` <br/>
