@@ -10,3 +10,7 @@ class IsOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Instance must have an attribute named `owner`.
         return obj.owner == request.user.username
+
+class IsRequestingSelf(permissions.BasePermission):
+    def has_permission(self, request, view, **kwargs):
+        return  view.kwargs.get('username') == request.user.username
