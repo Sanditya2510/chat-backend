@@ -5,7 +5,9 @@ from channels.consumer import  AsyncConsumer
 
 from channels.exceptions import StopConsumer
 
-from chat.models.chat import Thread, Message
+from chat.models.chat import (
+    Thread, GroupThread, Message
+)
 from user.models.friend import Friend
 
 class ChatConsumer(AsyncConsumer):
@@ -17,7 +19,8 @@ class ChatConsumer(AsyncConsumer):
         user2 = self.scope['url_route']['kwargs']['name']
         
         are_friends = await self.are_friends(user1.username, user2)
-        
+        print(are_friends
+        )
         if are_friends:
             thread = await self.get_thread(user1, user2)
             self.thread = thread
@@ -91,4 +94,97 @@ class ChatConsumer(AsyncConsumer):
     @database_sync_to_async
     def are_friends(self, user1, user2):
         return Friend.objects.are_friends(user1, user2)
+
+
+class GroupChatConsumer(AsyncConsumer):
+    def __init__(self, *args, **kwargs):
+        self.connected = False
+
+    async def websocket_connect(self, event):
+        thread_id = self.scope['url_route']['kwargs']['id']
+        user = self.scope['user']
         
+        self.connected = True
+
+        is_user_member = await self.is_user_member(user, thread_id)
+        if is_user_member:
+            thread = None
+            try:
+                thread = await self.get_grp_thread(thread_id)
+            except:
+                self.connected = False
+                await self.send({
+                    "type": "websocket.disconnect",
+                })
+                
+            if self.connected:
+                self.thread = thread
+                
+                chat_room =  f"grp_chat_{thread.id}"
+                self.chat_room = chat_room
+                await self.channel_layer.group_add(
+                    self.chat_room,
+                    self.channel_name
+                )
+                await self.send({   
+                    "type": "websocket.accept"
+                })
+        else:
+            self.connected = False
+            await self.send({
+                "type": "websocket.disconnect",
+            })
+
+
+    async def websocket_receive(self, event):
+        json_data = event.get('text')
+        if json_data is not None:
+            dict_data = json.loads(json_data)
+            msg = dict_data.get('message')
+            
+            user = self.scope['user']
+            username = user.username
+
+            res = {
+                'message': msg,
+                'username': username
+            }
+
+            await self.create_chat_message(user, msg)
+            
+            await self.channel_layer.group_send(
+                self.chat_room,
+                {
+                    'type': 'chat_message',
+                    'text': json.dumps(res)
+                }
+            )
+
+    async def chat_message(self, event):
+        await self.send({
+            'type': 'websocket.send',
+            'text': event['text']
+        })
+
+    async def websocket_disconnect(self, event):
+        if self.connected:
+            await self.channel_layer.group_discard(
+                self.chat_room,
+                self.channel_name 
+            )
+            self.connected = False
+
+        raise StopConsumer()
+
+    @database_sync_to_async
+    def create_chat_message(self,me, msg):
+        thread = self.thread
+        return Message.objects.create(grp_thread=thread, user=me, message=msg)
+
+    @database_sync_to_async
+    def get_grp_thread(self, id):
+        return GroupThread.objects.get(id=id)
+
+    @database_sync_to_async
+    def is_user_member(self, user, id):
+        return user in GroupThread.objects.get(id=id).users.all()

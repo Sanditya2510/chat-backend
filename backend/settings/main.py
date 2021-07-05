@@ -153,18 +153,19 @@ AUTH_USER_MODEL = 'user.User'
 
 ASGI_APPLICATION = "backend.routing.application"
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-    }
-}
-
 # CHANNEL_LAYERS = {
 #     "default": {
-#         "BACKEND": "channels_redis.core.RedisChannelLayer",
-#         "CONFIG": {
-#             "hosts": [("localhost", 6379)],
-#         },
-#     },
+#         "BACKEND": "channels.layers.InMemoryChannelLayer"
+#     }
 # }
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
